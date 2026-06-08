@@ -125,15 +125,29 @@ python3 toolkit/cli.py themes
 
 ```bash
 git clone --depth 1 https://github.com/oaker-io/wewrite.git ~/.claude/skills/wewrite
-cd ~/.claude/skills/wewrite && pip install -r requirements.txt
+cd ~/.claude/skills/wewrite && bash install.sh
 ```
 
 **OpenClaw**：
 
 ```bash
 git clone --depth 1 https://github.com/oaker-io/wewrite.git ~/.openclaw/skills/wewrite
-cd ~/.openclaw/skills/wewrite && pip install -r requirements.txt
+cd ~/.openclaw/skills/wewrite && bash install.sh
 ```
+
+**Codex**（OpenAI Codex CLI）：
+
+```bash
+git clone --depth 1 https://github.com/oaker-io/wewrite.git ~/.codex/skills/wewrite
+cd ~/.codex/skills/wewrite && bash install.sh
+python3 scripts/build_codex.py --install   # 装自定义 prompt 到 ~/.codex/prompts/
+```
+
+之后在 Codex 里用 `/wewrite 写一篇关于 X 的文章` 触发完整流程。Codex 没有 SKILL.md 自动触发机制，所以通过自定义 prompt 承载；源 `SKILL.md` 更新后重跑 `build_codex.py --install` 同步。详见 [`dist/codex/README.md`](dist/codex/README.md)。
+
+`install.sh` 会在 `.venv` 里创建隔离环境并安装依赖，自动绕过 macOS Homebrew Python 的 PEP 668 限制。skill 运行时会自动使用该 venv，无需手动 `activate`。
+
+> 若你的环境没有 PEP 668 限制，也可以照旧直接 `pip install -r requirements.txt`。
 
 安装后 skill 会在每次运行时自动检查新版本。有更新时说"更新"即可升级。
 

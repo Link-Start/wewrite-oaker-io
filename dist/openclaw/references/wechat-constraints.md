@@ -1,3 +1,5 @@
+<!-- DEV-REFERENCE ONLY — 不再由 SKILL.md 加载。converter（toolkit/converter.py）已自动执行其中的排版约束；写作/发布时需要的"平台硬限"已内联到 SKILL.md Step 7.1。本文件仅供维护 converter 时参考。 -->
+
 # 微信公众号平台限制说明
 
 本文档详细说明微信公众号编辑器的技术限制，以及本工具如何应对这些限制。

@@ -38,7 +38,10 @@ __pycache__/
 *.egg-info/
 dist/*
 !dist/openclaw/
+!dist/codex/
 build/
+.venv/
+venv/
 
 # Internal dev docs
 docs/

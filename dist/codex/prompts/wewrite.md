@@ -1,13 +1,14 @@
----
-name: wewrite
-description: |
-  微信公众号内容全流程助手：热点抓取 → 选题 → 框架 → 内容增强 → 写作 → SEO → 视觉AI → 排版推送草稿箱。
-  触发关键词：公众号、推文、微信文章、微信推文、草稿箱、微信排版、选题、热搜、
-  热点抓取、封面图、配图、写公众号、写一篇、主题画廊、排版主题、容器语法。
-  也覆盖：markdown 转微信格式、学习用户改稿风格、文章数据复盘、风格设置、
-  主题预览/切换、:::dialogue/:::timeline/:::callout/:::highlight/:::summary 容器语法。
-  不应被通用的"写文章"、blog、邮件、PPT、抖音/短视频、网站 SEO 触发——
-  需要有公众号/微信等明确上下文。
+<!-- 由 scripts/build_codex.py 从 SKILL.md 自动生成，请勿直接编辑。改源在 SKILL.md。 -->
+
+**本次写作需求**（在 `/wewrite` 后输入的内容）：$ARGUMENTS
+
+若上面为空，先问用户要写什么主题/选题，再开始。
+
+**Codex 运行环境差异（相对 Claude Code 版）**：
+- 没有 TaskCreate/TaskUpdate 工具 —— 每进入一个 Step，用一句话报进度（如「[3/8] 框架 + 素材」）。
+- 联网搜索用 Codex 的 `web_search`；读写文件、执行命令用 Codex 自带的 shell / 文件工具。
+- 所有 `python3` 命令见下方「Python 解释器约定」（优先用 {skill_dir}/.venv/bin/python3）。
+
 ---
 
 # WeWrite — 公众号文章全流程
@@ -30,15 +31,15 @@ description: |
 - **BLOCKED** — 关键步骤无法继续（如 Python 依赖缺失且用户拒绝安装）
 - **NEEDS_CONTEXT** — 需要用户提供信息才能继续（如首次设置需要公众号名称）
 
-**路径约定**：本文档中 `{baseDir}` 指本 SKILL.md 所在的目录（即 WeWrite 的根目录）。
+**路径约定**：本文档中 `{skill_dir}` 指本 SKILL.md 所在的目录（即 WeWrite 的根目录）。
 
 **读取/检查约定**：本文档中 `读取: <路径>` / `检查: <路径>` = **用你环境的文件读取工具真实打开该文件、读完其全部内容，然后再继续本步**。这不是描述性注释——未读取前不得执行依赖该文件的步骤；不同 harness 的文件读取工具名不同，按你环境的对应工具执行。
 
-**Python 解释器约定**：本文档所有 `python3` 命令优先解析为 `{baseDir}/.venv/bin/python3`（若该文件存在），否则回退系统 `python3`。venv 由 `install.sh` 创建，用于隔离依赖并绕过 macOS Homebrew Python 的 PEP 668 限制。
+**Python 解释器约定**：本文档所有 `python3` 命令优先解析为 `{skill_dir}/.venv/bin/python3`（若该文件存在），否则回退系统 `python3`。venv 由 `install.sh` 创建，用于隔离依赖并绕过 macOS Homebrew Python 的 PEP 668 限制。
 
 **Onboard 例外**：Onboard 是交互式的（需要问用户问题），不受"全自动"约束。Onboard 完成后回到全自动管道。
 
-**辅助功能 / 非管道命令**（按需加载）：用户发出"选题→发布"主流程之外的命令——重新设置风格 / 学习我的修改 / 学习排版 / 导入范文·学习这篇文章 / 查看范文库 / 看看文章数据 / 主题画廊 / 小绿书 / 更新 / 检查一下·自检——时 → `读取: {baseDir}/references/commands.md`，按其中「触发词 → 动作」表执行。
+**辅助功能 / 非管道命令**（按需加载）：用户发出"选题→发布"主流程之外的命令——重新设置风格 / 学习我的修改 / 学习排版 / 导入范文·学习这篇文章 / 查看范文库 / 看看文章数据 / 主题画廊 / 小绿书 / 更新 / 检查一下·自检——时 → `读取: {skill_dir}/references/commands.md`，按其中「触发词 → 动作」表执行。
 
 ---
 
@@ -61,14 +62,14 @@ description: |
 
 ```bash
 # 优先用 venv 解释器（PEP 668 环境下依赖装在 .venv 里）；后续所有 python3 调用同此规则
-PY="{baseDir}/.venv/bin/python3"; [ -x "$PY" ] || PY="python3"
+PY="{skill_dir}/.venv/bin/python3"; [ -x "$PY" ] || PY="python3"
 "$PY" -c "import markdown, bs4, cssutils, requests, yaml, pygments, PIL" 2>&1
 ```
 
 | 检查项 | 通过 | 不通过 |
 |--------|------|--------|
 | `config.yaml` 存在 | 静默 | 引导创建，或设 `skip_publish = true` |
-| Python 依赖 | 静默 | 引导执行 `bash {baseDir}/install.sh`（自动建 .venv 装依赖，解决 macOS PEP 668 报错）；若环境无此限制也可 `pip install -r requirements.txt` |
+| Python 依赖 | 静默 | 引导执行 `bash {skill_dir}/install.sh`（自动建 .venv 装依赖，解决 macOS PEP 668 报错）；若环境无此限制也可 `pip install -r requirements.txt` |
 | `wechat.appid` + `secret` | 静默 | 设 `skip_publish = true` |
 | `image.api_key` 或 `image.providers` 至少一项有效 | 静默 | 设 `skip_image_gen = true` |
 | `references/exemplars/index.yaml` | 静默 | 提示："范文库为空。如果你有已发布的文章（markdown），可以说**'导入范文'**建立风格库，写出来的文章会更像你。没有也不影响使用。" |
@@ -76,10 +77,10 @@ PY="{baseDir}/.venv/bin/python3"; [ -x "$PY" ] || PY="python3"
 **1.2 版本检查**（静默通过或提醒）：
 
 ```bash
-cd {baseDir} && git fetch origin main --quiet 2>/dev/null
+cd {skill_dir} && git fetch origin main --quiet 2>/dev/null
 ```
 
-比对本地 `{baseDir}/VERSION` 与远程 `git show origin/main:VERSION`：
+比对本地 `{skill_dir}/VERSION` 与远程 `git show origin/main:VERSION`：
 - 相同 → 静默通过
 - 不同 → 提示用户："WeWrite 有新版本可用（当前 X → 最新 Y），说「更新」即可升级。"**不阻断流程**，继续 1.3
 - git 不可用（无 .git 目录或 fetch 失败）→ 静默跳过
@@ -87,11 +88,11 @@ cd {baseDir} && git fetch origin main --quiet 2>/dev/null
 **1.3 加载风格**：
 
 ```
-检查: {baseDir}/style.yaml
+检查: {skill_dir}/style.yaml
 ```
 
 - 存在 → 提取 `name`、`topics`、`tone`、`voice`、`blacklist`、`theme`、`cover_style`、`author`、`content_style`
-- 不存在 → `读取: {baseDir}/references/onboard.md`，完成后回到 Step 1
+- 不存在 → `读取: {skill_dir}/references/onboard.md`，完成后回到 Step 1
 
 如果用户直接给了选题 → 跳到 Step 3（仍需框架选择和素材采集，不可跳过）。
 
@@ -102,7 +103,7 @@ cd {baseDir} && git fetch origin main --quiet 2>/dev/null
 **2.1 热点抓取**：
 
 ```bash
-python3 {baseDir}/scripts/fetch_hotspots.py --limit 30
+python3 {skill_dir}/scripts/fetch_hotspots.py --limit 30
 ```
 
 **降级**：脚本报错 → web_search "今日热点 {topics第一个垂类}"
@@ -110,11 +111,11 @@ python3 {baseDir}/scripts/fetch_hotspots.py --limit 30
 **2.2 历史分析 + SEO**：
 
 ```
-读取: {baseDir}/history.yaml（不存在则跳过）
+读取: {skill_dir}/history.yaml（不存在则跳过）
 ```
 
 ```bash
-python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
+python3 {skill_dir}/scripts/seo_keywords.py --json {关键词}
 ```
 
 历史分析（有 stats 数据时）：
@@ -127,7 +128,7 @@ python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
 **2.3 生成选题**：
 
 ```
-读取: {baseDir}/references/topic-selection.md
+读取: {skill_dir}/references/topic-selection.md
 ```
 
 生成 **10 个选题**，其中：
@@ -146,7 +147,7 @@ python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
 **3.1 框架选择**：
 
 ```
-读取: {baseDir}/references/frameworks.md
+读取: {skill_dir}/references/frameworks.md
 ```
 
 7 套框架（痛点/故事/清单/对比/热点解读/纯观点/复盘），自动选推荐指数最高的。
@@ -154,7 +155,7 @@ python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
 **3.2 素材采集 + 内容增强**（合并执行，共用搜索结果）：
 
 ```
-读取: {baseDir}/references/content-enhance.md
+读取: {skill_dir}/references/content-enhance.md
 ```
 
 根据 3.1 选定的框架类型，一次搜索同时完成素材采集和内容增强：
@@ -179,10 +180,10 @@ python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
 ### Step 4: 写作
 
 ```
-读取: {baseDir}/references/writing-guide.md
-读取: {baseDir}/playbook.md（如果存在，按 confidence 分级执行）
-读取: {baseDir}/history.yaml（最近 3 篇的 dimensions + closing_type 字段）
-读取: {baseDir}/references/exemplars/index.yaml（如果存在）
+读取: {skill_dir}/references/writing-guide.md
+读取: {skill_dir}/playbook.md（如果存在，按 confidence 分级执行）
+读取: {skill_dir}/history.yaml（最近 3 篇的 dimensions + closing_type 字段）
+读取: {skill_dir}/references/exemplars/index.yaml（如果存在）
 ```
 
 （writing-guide.md 是反 AI 写作底线规则，**未读取前不得开始写作**；它在 Step 4-5 期间保持驻留，Step 5.2 校验仍按其编号规则 1.1-3.2 检查，中途不要丢弃重读。）
@@ -202,10 +203,10 @@ python3 {baseDir}/scripts/seo_keywords.py --json {关键词}
 **4.2 加载写作人格**：
 
 ```
-读取: {baseDir}/personas/{选定人格}.yaml
+读取: {skill_dir}/personas/{选定人格}.yaml
 ```
 
-人格的选定规则（参见 `{baseDir}/references/persona-selection.md`）：
+人格的选定规则（参见 `{skill_dir}/references/persona-selection.md`）：
 
 - **style.yaml 有 `writing_persona`** → 直接加载该人格。用户已固定账号声音，尊重配置（persona-selection 的「用户明确指定」优先级最高）。
 - **没有 `writing_persona`**（或用户本轮明确要求换风格）→ 读取 `references/persona-selection.md`，按 Step 2.3 选定选题的特征匹配 top 2 人格；用 history.yaml 最近 3 篇的写作人格降权（保证风格多样化），向用户展示推荐理由让其二选一；匹配不明确时默认 midnight-friend。
@@ -246,7 +247,7 @@ Category 映射规则：
 
 如果匹配到的范文不足 3 篇，用 general category 补足。
 
-**Fallback（范文库为空时）**：读取 `{baseDir}/references/exemplar-seeds.yaml`，从每个段落类型中随机选 1 个注入 prompt。种子段落只示范人类写作的结构模式（句长方差、情绪锐度、自我纠正、非总结式收尾），不携带特定风格。注入时使用：
+**Fallback（范文库为空时）**：读取 `{skill_dir}/references/exemplar-seeds.yaml`，从每个段落类型中随机选 1 个注入 prompt。种子段落只示范人类写作的结构模式（句长方差、情绪锐度、自我纠正、非总结式收尾），不携带特定风格。注入时使用：
 
 > 以下是人类写作的结构模式示例，注意模仿其句长节奏和情绪表达方式（不要模仿具体内容或风格）：
 >
@@ -258,7 +259,7 @@ Category 映射规则：
 >
 > 【收尾模式】{seeds.closings 随机 1 个}
 
-建库命令：`python3 {baseDir}/scripts/extract_exemplar.py article.md`
+建库命令：`python3 {skill_dir}/scripts/extract_exemplar.py article.md`
 
 **4.4 写文章**：
 - H1 标题（20-28 字） + H2 结构，1500-2500 字
@@ -266,11 +267,11 @@ Category 映射规则：
 - **写作人格**：按 4.2 加载的人格参数写作（数据呈现方式、个人声音浓度、不确定性表达等）
 - **收尾方式**：persona 的 `closing_tendency` 仅作为倾向参考。根据文章内容和情绪弧线自行判断最自然的收尾方式。如果 history.yaml 中最近 3 篇有 `closing_type` 字段，避免使用相同的收尾类型
 - **写作规范**：writing-guide.md 中的基础规则（禁用词、句长方差、词汇混用等）在初稿阶段生效
-- **分段实时自检**：读取 `{baseDir}/references/realtime-check.md`，每写完约 500 字（或每个 H2）就地执行 5 项快速检查（句长交替 / 情绪锚定 / 词汇温度 / 素材锚定 / 句法变形），问题当场掐掉不累积到全文。按 500 字/H2 粒度查，不要写一句修一句；也不要为凑检查项刻意制造大量单句段落（会触发过度优化检测）
+- **分段实时自检**：读取 `{skill_dir}/references/realtime-check.md`，每写完约 500 字（或每个 H2）就地执行 5 项快速检查（句长交替 / 情绪锚定 / 词汇温度 / 素材锚定 / 句法变形），问题当场掐掉不累积到全文。按 500 字/H2 粒度查，不要写一句修一句；也不要为凑检查项刻意制造大量单句段落（会触发过度优化检测）
 - 2-3 个编辑锚点：`<!-- ✏️ 编辑建议：在这里加一句你自己的经历/看法 -->`
 - 可选容器语法：`:::dialogue`、`:::timeline`、`:::callout`、`:::quote`、`:::highlight`（琥珀高亮框）、`:::summary`（青色总结框）
 
-保存到 `{baseDir}/output/{date}-{slug}.md`
+保存到 `{skill_dir}/output/{date}-{slug}.md`
 
 **4.5 快速自检**（写完后立即执行，减少 Step 5 重写概率）：
 
@@ -292,7 +293,7 @@ LLM 自行完成，不需要调用脚本。
 ### Step 5: SEO + 验证
 
 ```
-读取: {baseDir}/references/seo-rules.md
+读取: {skill_dir}/references/seo-rules.md
 ```
 
 **5.1 SEO**：3 个备选标题 + 摘要（≤40 字）+ 5 标签 + 关键词密度优化
@@ -330,7 +331,7 @@ LLM 自行完成，不需要调用脚本。
 Agent 在 5.2 检查过程中同步完成综合评估（各 H2 之间的语气差异度、信息密度的高低交替、段落间的节奏变化、整体阅读流畅度），产出 0-1 分数。
 
 ```bash
-python3 {baseDir}/scripts/humanness_score.py {article_path} --json --tier3 {agent_tier3_score}
+python3 {skill_dir}/scripts/humanness_score.py {article_path} --json --tier3 {agent_tier3_score}
 ```
 
 解读 JSON 中 `composite_score`（0=质量高, 100=问题多）：
@@ -345,7 +346,7 @@ python3 {baseDir}/scripts/humanness_score.py {article_path} --json --tier3 {agen
 **如果 `skip_image_gen = true`** → 只执行 6.1。
 
 ```
-读取: {baseDir}/references/visual-prompts.md
+读取: {skill_dir}/references/visual-prompts.md
 ```
 
 **6.1 实体提取**：从终稿中提取 3-5 个**具体实体**（人物、产品名、场景、数据点、行业术语）。后续所有提示词必须包含至少 2 个实体。
@@ -353,7 +354,7 @@ python3 {baseDir}/scripts/humanness_score.py {article_path} --json --tier3 {agen
 **6.2 封面生成**：生成封面 3 组创意提示词（按 visual-prompts.md），选最佳 1 组调用 image_gen.py 生成。
 
 ```bash
-python3 {baseDir}/toolkit/image_gen.py --prompt "{选定的封面提示词}" --output {baseDir}/output/{slug}-cover.png --size cover
+python3 {skill_dir}/toolkit/image_gen.py --prompt "{选定的封面提示词}" --output {skill_dir}/output/{slug}-cover.png --size cover
 ```
 （--size 取值：封面用 cover，内文配图用 article；多 provider 自动 fallback 已内置。）
 
@@ -368,7 +369,7 @@ python3 {baseDir}/toolkit/image_gen.py --prompt "{选定的封面提示词}" --o
 对每张需要的配图，逐一调用：
 
 ```bash
-python3 {baseDir}/toolkit/image_gen.py --prompt "{该图的结构化提示词}" --output {baseDir}/output/{slug}-fig{N}.png --size article
+python3 {skill_dir}/toolkit/image_gen.py --prompt "{该图的结构化提示词}" --output {skill_dir}/output/{slug}-fig{N}.png --size article
 ```
 
 生成后把对应 Markdown 图片占位符替换为实际路径。
@@ -405,10 +406,10 @@ Converter 自动处理：CJK 加空格、加粗标点外移、列表转 section�
 
 ```bash
 # 发布
-python3 {baseDir}/toolkit/cli.py publish {markdown} --cover {cover} --theme {theme} --title "{title}" --digest "{digest}"
+python3 {skill_dir}/toolkit/cli.py publish {markdown} --cover {cover} --theme {theme} --title "{title}" --digest "{digest}"
 
 # 降级：本地预览
-python3 {baseDir}/toolkit/cli.py preview {markdown} --theme {theme} --no-open -o {output}.html
+python3 {skill_dir}/toolkit/cli.py preview {markdown} --theme {theme} --no-open -o {output}.html
 ```
 
 ---
@@ -418,7 +419,7 @@ python3 {baseDir}/toolkit/cli.py preview {markdown} --theme {theme} --no-open -o
 **8.1 写入历史**（推送成功或降级都要写，文件不存在则创建）：
 
 ```yaml
-# → {baseDir}/history.yaml
+# → {skill_dir}/history.yaml
 - date: "{日期}"
   title: "{标题}"
   topic_source: "热点抓取"  # 或 "用户指定"
@@ -460,7 +461,7 @@ python3 {baseDir}/toolkit/cli.py preview {markdown} --theme {theme} --no-open -o
 | 换一个选题 | 回到 Step 2.3 |
 | 换成 XX 主题 | 重新渲染 |
 
-其余非管道命令（学习我的修改 / 学习排版 / 导入范文 / 查看范文库 / 看看文章数据 / 主题画廊 / 小绿书 / 检查一下）→ `读取: {baseDir}/references/commands.md`。
+其余非管道命令（学习我的修改 / 学习排版 / 导入范文 / 查看范文库 / 看看文章数据 / 主题画廊 / 小绿书 / 检查一下）→ `读取: {skill_dir}/references/commands.md`。
 
 ---
 

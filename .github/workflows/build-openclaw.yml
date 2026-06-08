@@ -28,6 +28,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Context budget guard (#16)
+        run: |
+          python3 scripts/context_budget.py
+          python3 scripts/context_budget.py --budget-tokens 12500
+
       - name: Build OpenClaw skill
         run: python3 scripts/build_openclaw.py
 
